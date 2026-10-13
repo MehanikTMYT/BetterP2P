@@ -1,5 +1,5 @@
 modLoader = "kotlinforforge"
-loaderVersion = "[5,)"
+loaderVersion = "[6,)"
 issueTrackerURL = "https://github.com/LasmGratel/BetterP2P/issues"
 license = "GPL-3.0"
 
@@ -28,13 +28,13 @@ side = "BOTH"
 [[dependencies.${mod_id}]]
 modId = "kotlinforforge"
 mandatory = true
-versionRange = "[5,)"
+versionRange = "[6,)"
 ordering = "AFTER"
 side = "BOTH"
 
 [[dependencies.${mod_id}]]
 modId = "ae2"
 mandatory = true
-versionRange = "[${ae2_version},)"
+versionRange = "[26.1.3-alpha,)"
 ordering = "AFTER"
 side = "BOTH"

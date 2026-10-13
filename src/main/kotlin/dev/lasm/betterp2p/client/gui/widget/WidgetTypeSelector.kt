@@ -1,16 +1,17 @@
 package dev.lasm.betterp2p.client.gui.widget
 
+import net.minecraft.client.input.MouseButtonEvent
 import dev.lasm.betterp2p.client.gui.GuiAdvancedMemoryCard
 import dev.lasm.betterp2p.client.gui.drawBlockIcon
 import dev.lasm.betterp2p.util.p2p.ClientTunnelInfo
 import kotlin.math.min
 import net.minecraft.client.Minecraft
-import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.gui.components.AbstractWidget
 import net.minecraft.client.gui.layouts.LayoutElement
 import net.minecraft.client.gui.narration.NarrationElementOutput
 import net.minecraft.network.chat.Component
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 
 const val ICONS_PER_ROW = 5
 
@@ -45,13 +46,13 @@ class WidgetTypeSelector(
         translated = list
     }
 
-    override fun onClick(mouseX: Double, mouseY: Double, button: Int) {
+    override fun onClick(event: MouseButtonEvent, doubleClick: Boolean) {
         if (hoveredIdx != -1) parent?.accept(p2pTypes.getOrNull(hoveredIdx))
-        super.onClick(mouseX, mouseY, button)
+        super.onClick(event, doubleClick)
     }
 
-    override fun renderWidget(
-        graphics: GuiGraphics,
+    override fun extractWidgetRenderState(
+        graphics: GuiGraphicsExtractor,
         mouseX: Int,
         mouseY: Int,
         partialFloat: Float
@@ -88,11 +89,11 @@ class WidgetTypeSelector(
             }
             drawBlockIcon(
                 graphics,
-                ResourceLocation.withDefaultNamespace("textures/block/coal_block.png"),
+                Identifier.withDefaultNamespace("textures/block/coal_block.png"),
                 x = iconPosX + 1,
                 y = iconPosY + 1
             )
-            graphics.drawString(
+            graphics.text(
                 Minecraft.getInstance().font,
                 "?",
                 iconPosX + 6,

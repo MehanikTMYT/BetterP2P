@@ -1,5 +1,9 @@
 package dev.lasm.betterp2p.client.gui.widget
 
+import net.minecraft.client.input.CharacterEvent
+import net.minecraft.client.input.KeyEvent
+import net.minecraft.client.input.MouseButtonEvent
+import net.neoforged.neoforge.client.network.ClientPacketDistributor
 import appeng.client.gui.widgets.ITooltip
 import dev.lasm.betterp2p.client.gui.InfoWrapper
 import dev.lasm.betterp2p.client.gui.drawBlockIcon
@@ -12,7 +16,7 @@ import dev.lasm.betterp2p.util.p2p.ClientTunnelInfo
 import java.util.function.Consumer
 import kotlin.reflect.KProperty0
 import net.minecraft.client.Minecraft
-import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.gui.components.AbstractWidget
 import net.minecraft.client.gui.components.Button
 import net.minecraft.client.gui.narration.NarrationElementOutput
@@ -109,8 +113,8 @@ class WidgetP2PDevice(
 
     override fun updateWidgetNarration(narrationElementOutput: NarrationElementOutput) {}
 
-    override fun renderWidget(
-        graphics: GuiGraphics,
+    override fun extractWidgetRenderState(
+        graphics: GuiGraphicsExtractor,
         mouseX: Int,
         mouseY: Int,
         partialTicks: Float
@@ -175,7 +179,6 @@ class WidgetP2PDevice(
             )
         }
 
-        graphics.setColor(1.0f, 1.0f, 1.0f, 1.0f)
         // Draw our icons...
         drawBlockIcon(graphics, info.icon, info.overlay, x + 3, y + 3)
 
@@ -192,72 +195,75 @@ class WidgetP2PDevice(
         // Now draw the stuff that messes up our GL state (aka text)
         val leftAlign = x + P2PEntryConstants.LEFT_ALIGN
         if (renderNameTextfield) {
-            graphics.drawString(
+            graphics.text(
                 font,
                 Component.translatable("gui.advanced_memory_card.name", info.name),
                 leftAlign,
                 y + 2,
-                0x404040,
+                0xFF404040.toInt(),
                 false
             )
         } else {
-            graphics.drawString(
+            graphics.text(
                 font,
                 Component.translatable("gui.advanced_memory_card.name", ""),
                 leftAlign,
                 y + 2,
-                0x404040,
+                0xFF404040.toInt(),
                 false
             )
         }
-        graphics.drawString(font, info.description, leftAlign, y + 12, 0x404040, false)
-        graphics.drawString(font, info.freqDisplay, leftAlign, y + 22, 0x404040, false)
+        graphics.text(font, info.description, leftAlign, y + 12, 0xFF404040.toInt(), false)
+        graphics.text(font, info.freqDisplay, leftAlign, y + 22, 0xFF404040.toInt(), false)
         if (info.channels != null) {
-            graphics.drawString(font, info.channels!!, leftAlign, y + 32, 0x404040, false)
+            graphics.text(font, info.channels!!, leftAlign, y + 32, 0xFF404040.toInt(), false)
         }
 
         updateButtonVisibility()
     }
 
-    override fun clicked(mouseX: Double, mouseY: Double): Boolean {
+    // Fleet port (26.1): input arrives as MouseButtonEvent / KeyEvent / CharacterEvent.
+    fun clicked(mouseX: Double, mouseY: Double): Boolean {
         return bindButton.isClicked(mouseX, mouseY) ||
             unbindButton.isClicked(mouseX, mouseY) ||
-            super.clicked(mouseX, mouseY)
+            (active && visible && isMouseOver(mouseX, mouseY))
     }
 
-    override fun mouseClicked(mouseX: Double, mouseY: Double, button: Int): Boolean {
-        if (clicked(mouseX, mouseY) && button == GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
-            this.playDownSound(Minecraft.getInstance().soundManager)
+    override fun mouseClicked(event: MouseButtonEvent, doubleClick: Boolean): Boolean {
+        if (clicked(event.x(), event.y()) && event.button() == GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
+            playButtonClickSound(Minecraft.getInstance().soundManager)
             col.gui.openTypeSelector(this, false)
             return true
         }
-        return bindButton.mouseClicked(mouseX, mouseY, button) ||
-            unbindButton.mouseClicked(mouseX, mouseY, button) ||
-            super.mouseClicked(mouseX, mouseY, button)
+        return bindButton.mouseClicked(event, doubleClick) ||
+            unbindButton.mouseClicked(event, doubleClick) ||
+            super.mouseClicked(event, doubleClick)
     }
 
-    override fun keyPressed(keyCode: Int, scanCode: Int, modifiers: Int): Boolean {
+    override fun keyPressed(event: KeyEvent): Boolean {
         if (col.getRenameBar().visible) {
             col.getRenameBar().isFocused = true
-            if (keyCode == GLFW.GLFW_KEY_ENTER) {
+            if (event.key() == GLFW.GLFW_KEY_ENTER) {
                 col.finishRename()
             } else {
-                return col.getRenameBar().keyPressed(keyCode, scanCode, modifiers)
+                return col.getRenameBar().keyPressed(event)
             }
             return true
         }
-        return super.keyPressed(keyCode, scanCode, modifiers)
+        return super.keyPressed(event)
     }
 
-    override fun charTyped(codePoint: Char, modifiers: Int): Boolean {
+    override fun charTyped(event: CharacterEvent): Boolean {
         if (col.getRenameBar().visible) {
             col.getRenameBar().isFocused = true
-            return col.getRenameBar().charTyped(codePoint, modifiers)
+            return col.getRenameBar().charTyped(event)
         }
-        return super.charTyped(codePoint, modifiers)
+        return super.charTyped(event)
     }
 
-    override fun onClick(mouseX: Double, mouseY: Double, button: Int) {
+    override fun onClick(event: MouseButtonEvent, doubleClick: Boolean) {
+        val mouseX = event.x()
+        val mouseY = event.y()
         val info = infoSupplier() ?: return
         if (
             isHovered &&
@@ -287,7 +293,7 @@ class WidgetP2PDevice(
     }
 
     override fun accept(type: ClientTunnelInfo?) {
-        PacketDistributor.sendToServer(
+        ClientPacketDistributor.sendToServer(
             C2SChangeP2PType(type?.index ?: TUNNEL_ANY, infoSupplier()!!.loc)
         )
         col.gui.closeTypeSelector(type)

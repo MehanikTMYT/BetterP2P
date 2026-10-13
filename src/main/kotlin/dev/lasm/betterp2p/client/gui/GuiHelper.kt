@@ -1,18 +1,14 @@
 package dev.lasm.betterp2p.client.gui
 
-import com.mojang.blaze3d.systems.RenderSystem
-import com.mojang.blaze3d.vertex.BufferUploader
-import com.mojang.blaze3d.vertex.DefaultVertexFormat
-import com.mojang.blaze3d.vertex.Tesselator
-import com.mojang.blaze3d.vertex.VertexFormat
-import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.gui.components.AbstractWidget
-import net.minecraft.client.renderer.GameRenderer
-import net.minecraft.resources.ResourceLocation
-import org.joml.Matrix4f
+import net.minecraft.client.renderer.RenderPipelines
+import net.minecraft.resources.Identifier
 
-fun GuiGraphics.drawTexturedQuad(
-    texture: ResourceLocation,
+// Fleet port (26.1): GUI drawing is extracted into render states; the immediate Tesselator/BufferUploader path is gone,
+// GuiGraphicsExtractor#blit covers the textured quad.
+fun GuiGraphicsExtractor.drawTexturedQuad(
+    texture: Identifier,
     x0: Float,
     y0: Float,
     x1: Float,
@@ -22,20 +18,11 @@ fun GuiGraphics.drawTexturedQuad(
     u1: Float,
     v1: Float
 ) {
-    RenderSystem.setShader { GameRenderer.getPositionTexShader() }
-    RenderSystem.setShaderTexture(0, texture)
-    val matrix4f: Matrix4f = this.pose().last().pose()
-    val bufferBuilder =
-        Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX)
-    bufferBuilder.addVertex(matrix4f, x0, y1, 0.0f).setUv(u0, v1)
-    bufferBuilder.addVertex(matrix4f, x1, y1, 0.0f).setUv(u1, v1)
-    bufferBuilder.addVertex(matrix4f, x1, y0, 0.0f).setUv(u1, v0)
-    bufferBuilder.addVertex(matrix4f, x0, y0, 0.0f).setUv(u0, v0)
-    BufferUploader.drawWithShader(bufferBuilder.build()!!)
+    blit(texture, x0.toInt(), y0.toInt(), x1.toInt(), y1.toInt(), u0, u1, v0, v1)
 }
 
-fun GuiGraphics.drawIcon(srcX: Int, srcY: Int, x: Int, y: Int, width: Int = 16, height: Int = 16) {
-    blit(TEXTURE, x, y, 0, srcX.toFloat(), srcY.toFloat(), width, height, 288, 264)
+fun GuiGraphicsExtractor.drawIcon(srcX: Int, srcY: Int, x: Int, y: Int, width: Int = 16, height: Int = 16) {
+    blit(RenderPipelines.GUI_TEXTURED, TEXTURE, x, y, srcX.toFloat(), srcY.toFloat(), width, height, 288, 264)
 }
 
 fun AbstractWidget.isClicked(mouseX: Double, mouseY: Double) =
@@ -47,10 +34,10 @@ fun AbstractWidget.isClicked(mouseX: Double, mouseY: Double) =
         (mouseY < (this.y + this.height).toDouble())
 
 fun drawBlockIcon(
-    graphics: GuiGraphics,
-    icon: ResourceLocation,
-    overlay: ResourceLocation =
-        ResourceLocation.fromNamespaceAndPath("ae2", "textures/part/p2p_tunnel_front.png"),
+    graphics: GuiGraphicsExtractor,
+    icon: Identifier,
+    overlay: Identifier =
+        Identifier.fromNamespaceAndPath("ae2", "textures/part/p2p_tunnel_front.png"),
     x: Int,
     y: Int,
     width: Int = 16,

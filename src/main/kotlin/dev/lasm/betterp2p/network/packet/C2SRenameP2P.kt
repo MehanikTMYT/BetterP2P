@@ -13,16 +13,16 @@ import net.minecraft.network.chat.Component
 import net.minecraft.network.codec.ByteBufCodecs
 import net.minecraft.network.codec.StreamCodec
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import net.neoforged.neoforge.network.handling.IPayloadContext
 
 class C2SRenameP2P(val p2p: P2PLocation, val name: String) : IC2SMessage {
-    override fun type(): CustomPacketPayload.Type<out CustomPacketPayload?> = TYPE
+    override fun type(): CustomPacketPayload.Type<out CustomPacketPayload> = TYPE
 
     companion object {
         val TYPE =
             CustomPacketPayload.Type<C2SRenameP2P>(
-                ResourceLocation.fromNamespaceAndPath(BetterP2P.MOD_ID, "rename_p2p")
+                Identifier.fromNamespaceAndPath(BetterP2P.MOD_ID, "rename_p2p")
             )
         val STREAM_CODEC: StreamCodec<ByteBuf, C2SRenameP2P> =
             StreamCodec.composite(
@@ -39,7 +39,7 @@ val ServerRenameP2PTunnelHandler: (C2SRenameP2P, IPayloadContext) -> Unit =
     a@{ message: C2SRenameP2P, ctx: IPayloadContext ->
         val player = ctx.player()
 
-        val world = player.server?.getLevel(message.p2p.dim) ?: return@a
+        val world = player.level().server?.getLevel(message.p2p.dim) ?: return@a
         val te = world.getChunkAt(message.p2p.pos).getBlockEntity(message.p2p.pos) ?: return@a
         val state = ModNetwork.playerState[player.uuid] ?: return@a
         val facing = message.p2p.facing

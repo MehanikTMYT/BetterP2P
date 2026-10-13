@@ -35,7 +35,7 @@ object BetterP2PCodecs {
             ::P2PInfo
         )
 
-    fun <B, C, T1, T2, T3, T4, T5, T6, T7, T8, T9> composite(
+    fun <B : Any, C : Any, T1 : Any, T2 : Any, T3 : Any, T4 : Any, T5 : Any, T6 : Any, T7 : Any, T8 : Any, T9 : Any> composite(
         codec1: StreamCodec<in B, T1>,
         getter1: Function<C, T1>,
         codec2: StreamCodec<in B, T2>,

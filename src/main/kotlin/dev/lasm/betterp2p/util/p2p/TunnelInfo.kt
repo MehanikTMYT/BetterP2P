@@ -3,7 +3,7 @@ package dev.lasm.betterp2p.util.p2p
 import appeng.parts.p2p.P2PTunnelPart
 import net.minecraft.ChatFormatting
 import net.minecraft.network.chat.Component
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import net.minecraft.world.item.ItemStack
 
 /** Common tunnel info to be used on server */
@@ -27,7 +27,7 @@ class ClientTunnelInfo(
     index: Int,
     stack: ItemStack,
     clazz: Class<out P2PTunnelPart<*>>,
-    val icon: () -> ResourceLocation
+    val icon: () -> Identifier
 ) : TunnelInfo(index, stack, clazz) {
     override fun toString(): String {
         return "ClientTunnelInfo(icon=${icon()}) ${super.toString()}"

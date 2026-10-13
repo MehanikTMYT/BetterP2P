@@ -6,7 +6,7 @@ import dev.lasm.betterp2p.network.data.P2PLocation
 import dev.lasm.betterp2p.util.p2p.ClientTunnelInfo
 import net.minecraft.ChatFormatting
 import net.minecraft.network.chat.Component
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 
 class InfoWrapper(info: P2PInfo) {
     var frequency: Short = info.frequency
@@ -31,11 +31,11 @@ class InfoWrapper(info: P2PInfo) {
     var error: Boolean = false
 
     /** The backing p2p icon/feature */
-    var icon: ResourceLocation
+    var icon: Identifier
 
     /** p2p frame */
-    var overlay: ResourceLocation =
-        ResourceLocation.fromNamespaceAndPath("ae2", "textures/part/p2p_tunnel_front.png")
+    var overlay: Identifier =
+        Identifier.fromNamespaceAndPath("ae2", "textures/part/p2p_tunnel_front.png")
 
     val description: Component
 
@@ -97,7 +97,7 @@ class InfoWrapper(info: P2PInfo) {
                     .withStyle(ChatFormatting.YELLOW),
                 Component.translatable(
                         "gui.advanced_memory_card.dim",
-                        info.dim.location().toString()
+                        info.dim.identifier().toString()
                     )
                     .withStyle(ChatFormatting.YELLOW)
             )

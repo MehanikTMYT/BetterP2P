@@ -1,98 +1,70 @@
+// Fleet port to Minecraft 26.1.2 / NeoForge (2026-10-09): NeoGradle -> ModDevGradle, Java 25, Kotlin 2.4.0 /
+// Kotlin for Forge 6.3.0, our AE2 26.1 fork from mavenLocal. Original build files are kept in .fleet-orig/.
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
-    id 'net.neoforged.gradle.userdev' version '7.0.192'
-    id 'org.jetbrains.kotlin.jvm' version "2.2.20"
-    id 'com.diffplug.spotless-changelog' version "3.0.2"
-    id 'com.diffplug.spotless' version '6.21.0'
-    id 'com.palantir.git-version' version '3.0.0'
+    id 'java-library'
+    id 'net.neoforged.moddev' version '2.0.141'
+    id 'org.jetbrains.kotlin.jvm' version '2.4.0'
 }
 
 group = 'dev.lasm.betterp2p'
-version = '1.5.2'
-
+version = '1.5.2+26.1.2'
 base.archivesName = project.name
 
 java {
     withSourcesJar()
-    toolchain.languageVersion = JavaLanguageVersion.of(21)
+    toolchain.languageVersion = JavaLanguageVersion.of(25)
 }
-
-compileKotlin.compilerOptions.jvmTarget = JvmTarget.JVM_21
-
-runs {
-    configureEach {
-        systemProperty 'forge.logging.markers', 'REGISTRIES'
-        systemProperty 'forge.logging.console.level', 'debug'
-
-        modSource project.sourceSets.main
-    }
-
-    client {
-        systemProperty 'neoforge.enabledGameTestNamespaces', project.name
-    }
-
-    server {
-        systemProperty 'neoforge.enabledGameTestNamespaces', project.name
-        argument '--nogui'
-    }
-
-    gameTestServer {
-        systemProperty 'neoforge.enabledGameTestNamespaces', project.name
-    }
-
-    data {
-        arguments.addAll '--mod', project.name, '--all', '--output', file('src/generated/resources/').getAbsolutePath(), '--existing', file('src/main/resources/').getAbsolutePath()
-    }
-}
+kotlin.compilerOptions.jvmTarget = JvmTarget.JVM_25
 
 repositories {
-    maven { url = "https://maven.parchmentmc.org" } // Parchment mappings
-    // KFF
+    mavenLocal()
     maven {
-        name "Kotlin for Forge"
-        url "https://thedarkcolour.github.io/KotlinForForge/"
+        name = "Kotlin for Forge"
+        url = "https://thedarkcolour.github.io/KotlinForForge/"
+        content { includeGroup "thedarkcolour" }
+    }
+    maven {
+        name = "ModMaven"
+        url = "https://modmaven.dev"
     }
 }
+
+neoForge {
+    version = project.neo_version
+    runs {
+        configureEach {
+            systemProperty 'forge.logging.markers', 'REGISTRIES'
+            systemProperty 'forge.logging.console.level', 'debug'
+            jvmArgument '-Xmx2g'
+        }
+        client {
+            client()
+        }
+        server {
+            server()
+            programArgument '--nogui'
+        }
+        clientData {
+            clientData()
+            programArguments.addAll '--mod', project.name, '--all', '--output', file('src/generated/resources/').getAbsolutePath(), '--existing', file('src/main/resources/').getAbsolutePath()
+        }
+    }
+    mods {
+        "${project.name}" {
+            sourceSet sourceSets.main
+        }
+    }
+}
+
+sourceSets.main.resources { srcDir 'src/generated/resources' }
 
 dependencies {
-    implementation "net.neoforged:neoforge:${neo_version}"
     implementation "org.appliedenergistics:appliedenergistics2:${ae2_version}"
-    compileOnly 'org.jetbrains.kotlin:kotlin-stdlib'
-    implementation 'thedarkcolour:kotlinforforge-neoforge:5.10.0'
-}
-
-spotless {
-    encoding 'UTF-8'
-
-    format 'misc', {
-        target '.gitignore'
-
-        trimTrailingWhitespace()
-        indentWithSpaces(4)
-        endWithNewline()
-    }
-    java {
-        target 'src/main/java/**/*.java', 'src/test/java/**/*.java' // exclude api as they are not our files
-        def orderFile = rootProject.file('spotless/spotless.importorder')
-        def formatFile = rootProject.file('spotless/spotless.eclipseformat.xml')
-
-        toggleOffOn()
-        importOrderFile(orderFile)
-        removeUnusedImports()
-        endWithNewline()
-        indentWithTabs(2)
-        indentWithSpaces(4)
-        //noinspection GroovyAssignabilityCheck
-        eclipse('4.19').configFile(formatFile)
-    }
-    kotlin {
-        target 'src/*/kotlin/**/*.kt'
-        toggleOffOn()
-        ktfmt('0.39').kotlinlangStyle()
-        trimTrailingWhitespace()
-        endWithNewline()
-    }
+    compileOnly 'org.jetbrains.kotlin:kotlin-stdlib:2.4.0'
+    implementation "thedarkcolour:kotlinforforge-neoforge:${kff_version}"
+    runtimeOnly "dev.emi:emi-neoforge:${emi_version}"
 }
 
 tasks.withType(ProcessResources).configureEach {
@@ -117,7 +89,3 @@ tasks.withType(ProcessResources).configureEach {
     }
 }
 
-spotlessChangelog {
-    changelogFile 'CHANGELOG.md'
-    enforceCheck true
-}

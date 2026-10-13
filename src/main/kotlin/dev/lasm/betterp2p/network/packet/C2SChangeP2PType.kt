@@ -8,16 +8,16 @@ import io.netty.buffer.ByteBuf
 import net.minecraft.network.codec.ByteBufCodecs
 import net.minecraft.network.codec.StreamCodec
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import net.neoforged.neoforge.network.handling.IPayloadContext
 
 class C2SChangeP2PType(val newType: Int = TUNNEL_ANY, val p2p: P2PLocation) : IC2SMessage {
-    override fun type(): CustomPacketPayload.Type<out CustomPacketPayload?> = TYPE
+    override fun type(): CustomPacketPayload.Type<out CustomPacketPayload> = TYPE
 
     companion object {
         val TYPE =
             CustomPacketPayload.Type<C2SChangeP2PType>(
-                ResourceLocation.fromNamespaceAndPath(BetterP2P.MOD_ID, "change_p2p_type")
+                Identifier.fromNamespaceAndPath(BetterP2P.MOD_ID, "change_p2p_type")
             )
         val STREAM_CODEC: StreamCodec<ByteBuf, C2SChangeP2PType> =
             StreamCodec.composite(

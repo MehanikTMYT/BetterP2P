@@ -12,7 +12,7 @@ import net.minecraft.world.level.Level
 fun hashP2P(pos: BlockPos, facing: Int, dim: ResourceKey<Level>): Long {
     val ret = facing.toULong() shl 60
     val lo: ULong = pos.x.toULong() or (pos.y.toULong() shl 32)
-    val hi: ULong = pos.z.toULong() or (dim.location().hashCode().toULong() shl 32)
+    val hi: ULong = pos.z.toULong() or (dim.identifier().hashCode().toULong() shl 32)
     var hash = hashLen16(lo, hi)
     hash = hash xor (hash shr 59)
     return (ret or hash).toLong()

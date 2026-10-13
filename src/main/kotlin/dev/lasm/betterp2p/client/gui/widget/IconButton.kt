@@ -1,12 +1,11 @@
 package dev.lasm.betterp2p.client.gui.widget
 
 import appeng.client.gui.widgets.ITooltip
-import com.mojang.blaze3d.systems.RenderSystem
 import dev.lasm.betterp2p.client.gui.GUI_TEX_HEIGHT
 import dev.lasm.betterp2p.client.gui.GUI_WIDTH
 import dev.lasm.betterp2p.client.gui.TEXTURE
 import dev.lasm.betterp2p.client.gui.drawTexturedQuad
-import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.gui.components.Button
 import net.minecraft.client.renderer.Rect2i
 import net.minecraft.network.chat.Component
@@ -16,14 +15,13 @@ open class IconButton(var texX: Int, var texY: Int, onPress: OnPress) :
 
     var messages = mutableListOf(message)
 
-    public override fun renderWidget(
-        guiGraphics: GuiGraphics,
+    // Fleet port (26.1): Button is abstract and its widget render is final; the icon is drawn as the contents.
+    override fun extractContents(
+        guiGraphics: GuiGraphicsExtractor,
         mouseX: Int,
         mouseY: Int,
         partial: Float
     ) {
-        RenderSystem.enableBlend()
-        RenderSystem.enableDepthTest()
         renderBackground(guiGraphics, mouseY, mouseY, partial)
 
         guiGraphics.drawTexturedQuad(
@@ -49,7 +47,7 @@ open class IconButton(var texX: Int, var texY: Int, onPress: OnPress) :
         return i
     }
 
-    fun renderBackground(graphics: GuiGraphics, mouseX: Int, mouseY: Int, partial: Float) {
+    fun renderBackground(graphics: GuiGraphicsExtractor, mouseX: Int, mouseY: Int, partial: Float) {
         val k = getHoverState()
         graphics.drawTexturedQuad(
             TEXTURE,

@@ -1,52 +1,29 @@
 package dev.lasm.betterp2p.client
 
 import appeng.parts.BusCollisionHelper
-import com.mojang.blaze3d.vertex.DefaultVertexFormat
 import com.mojang.blaze3d.vertex.PoseStack
-import com.mojang.blaze3d.vertex.VertexFormat
 import dev.lasm.betterp2p.client.ClientCache.positions
 import dev.lasm.betterp2p.client.ClientCache.selectedFacing
 import dev.lasm.betterp2p.client.ClientCache.selectedPosition
 import dev.lasm.betterp2p.item.ItemAdvancedMemoryCard
-import java.util.*
-import net.minecraft.client.Camera
 import net.minecraft.client.renderer.MultiBufferSource
-import net.minecraft.client.renderer.RenderStateShard
-import net.minecraft.client.renderer.RenderType
+import net.minecraft.client.renderer.rendertype.RenderTypes
+import net.minecraft.world.phys.Vec3
 import net.minecraft.core.BlockPos
 import net.minecraft.util.Mth
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.shapes.Shapes
-import org.lwjgl.opengl.GL11
 
 object RenderBlockOutline {
-    @JvmStatic
-    val LINES_BEHIND_BLOCK: RenderType =
-        RenderType.create(
-            "lines_behind_block",
-            DefaultVertexFormat.POSITION_COLOR_NORMAL,
-            VertexFormat.Mode.LINES,
-            256,
-            false,
-            false,
-            RenderType.CompositeState.builder()
-                .setShaderState(RenderStateShard.RENDERTYPE_LINES_SHADER)
-                .setLineState(RenderStateShard.LineStateShard(OptionalDouble.empty()))
-                .setLayeringState(RenderStateShard.VIEW_OFFSET_Z_LAYERING)
-                .setTransparencyState(RenderStateShard.TRANSLUCENT_TRANSPARENCY)
-                .setDepthTestState(RenderStateShard.DepthTestStateShard(">", GL11.GL_GREATER))
-                .setOutputState(RenderStateShard.ITEM_ENTITY_TARGET)
-                .setWriteMaskState(RenderStateShard.COLOR_WRITE)
-                .setCullState(RenderStateShard.NO_CULL)
-                .createCompositeState(false)
-        )
+    // Fleet port (26.1): the custom "lines behind blocks" RenderType (depth GREATER) would need its own RenderPipeline;
+    // translucent vanilla lines are used instead, so the preview no longer shows through walls.
 
     fun showPartPlacementPreview(
         player: Player?,
         poseStack: PoseStack,
         buffers: MultiBufferSource,
-        camera: Camera
+        camera: Vec3
     ) {
         val item = player?.mainHandItem
         if (item?.item is ItemAdvancedMemoryCard) {
@@ -98,7 +75,7 @@ object RenderBlockOutline {
     fun renderBoxes(
         poseStack: PoseStack,
         buffers: MultiBufferSource,
-        camera: Camera,
+        camera: Vec3,
         pos: BlockPos?,
         boxes: List<AABB>,
         red: Int,
@@ -106,16 +83,16 @@ object RenderBlockOutline {
         blue: Int,
         insideBlock: Boolean
     ) {
-        val renderType = if (insideBlock) LINES_BEHIND_BLOCK else RenderType.lines()
+        val renderType = if (insideBlock) RenderTypes.linesTranslucent() else RenderTypes.lines()
         val buffer = buffers.getBuffer(renderType)
         val alpha = ((if (insideBlock) 0.6f else 0.8f) * 255.0f).toInt()
 
         for (box in boxes) {
             val shape = Shapes.create(box)
 
-            val x = pos!!.x - camera.position.x
-            val y = pos.y - camera.position.y
-            val z = pos.z - camera.position.z
+            val x = pos!!.x - camera.x
+            val y = pos.y - camera.y
+            val z = pos.z - camera.z
 
             val pose = poseStack.last()
             shape.forAllEdges { k: Double, l: Double, m: Double, n: Double, o: Double, p: Double ->
@@ -141,10 +118,12 @@ object RenderBlockOutline {
                             s
                         }
                     )
+                    .setLineWidth(2.0f)
                 buffer
                     .addVertex(pose.pose(), (n + x).toFloat(), (o + y).toFloat(), (p + z).toFloat())
                     .setColor(red, green, blue, alpha)
                     .setNormal(pose, q, r, s)
+                    .setLineWidth(2.0f)
             }
         }
     }
