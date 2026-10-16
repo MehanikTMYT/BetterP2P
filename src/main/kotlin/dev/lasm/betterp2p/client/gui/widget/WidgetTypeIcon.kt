@@ -1,24 +1,24 @@
 package dev.lasm.betterp2p.client.gui.widget
 
 import dev.lasm.betterp2p.client.gui.drawBlockIcon
-import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.gui.components.AbstractWidget
 import net.minecraft.client.gui.components.Tooltip
 import net.minecraft.client.gui.narration.NarrationElementOutput
 import net.minecraft.network.chat.Component
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 
 class WidgetTypeIcon(
     x: Int,
     y: Int,
     tooltipLiteral: String,
-    val iconSupplier: () -> ResourceLocation
+    val iconSupplier: () -> Identifier
 ) : AbstractWidget(x, y, 18, 18, Component.empty()) {
     init {
-        tooltip = Tooltip.create(Component.literal(tooltipLiteral))
+        setTooltip(Tooltip.create(Component.literal(tooltipLiteral)))
     }
 
-    override fun renderWidget(graphics: GuiGraphics, i: Int, j: Int, f: Float) {
+    override fun extractWidgetRenderState(graphics: GuiGraphicsExtractor, i: Int, j: Int, f: Float) {
         if (isHovered) {
             graphics.fill(x, y, x + width, y + height, 0xFF00FF00.toInt())
         }

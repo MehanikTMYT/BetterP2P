@@ -1,11 +1,13 @@
 package dev.lasm.betterp2p.client.gui
 
+import net.minecraft.client.renderer.RenderPipelines
+import net.minecraft.client.input.MouseButtonEvent
+import net.neoforged.neoforge.client.network.ClientPacketDistributor
 import appeng.client.gui.Tooltip
 import appeng.client.gui.style.Blitter
 import appeng.client.gui.widgets.ITooltip
 import appeng.parts.p2p.FluidP2PTunnelPart
 import appeng.parts.p2p.MEP2PTunnelPart
-import com.mojang.blaze3d.systems.RenderSystem
 import dev.lasm.betterp2p.BetterP2P
 import dev.lasm.betterp2p.BetterP2P.MOD_ID
 import dev.lasm.betterp2p.client.AdvancedMemoryCardMenu
@@ -25,7 +27,7 @@ import java.util.Optional
 import kotlin.jvm.optionals.getOrNull
 import net.minecraft.ChatFormatting
 import net.minecraft.client.gui.Font
-import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.gui.components.Button
 import net.minecraft.client.gui.components.ComponentRenderUtils
 import net.minecraft.client.gui.components.EditBox
@@ -36,11 +38,11 @@ import net.minecraft.client.renderer.Rect2i
 import net.minecraft.client.resources.language.I18n
 import net.minecraft.network.chat.Component
 import net.minecraft.network.chat.Style
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import net.minecraft.util.FormattedCharSequence
 import net.neoforged.neoforge.network.PacketDistributor
 
-val TEXTURE = ResourceLocation.fromNamespaceAndPath(MOD_ID, "textures/gui/advanced_memory_card.png")
+val TEXTURE = Identifier.fromNamespaceAndPath(MOD_ID, "textures/gui/advanced_memory_card.png")
 const val GUI_WIDTH = 288
 const val GUI_TEX_HEIGHT = 264
 
@@ -68,7 +70,7 @@ class GuiAdvancedMemoryCard(val theMenu: AdvancedMemoryCardMenu) :
     val refreshButton = IconButton(160, 200, this::onRefresh)
 
     fun onRefresh(_button: Button?) {
-        PacketDistributor.sendToServer(C2SRefreshP2PList(type?.index ?: TUNNEL_ANY))
+        ClientPacketDistributor.sendToServer(C2SRefreshP2PList(type?.index ?: TUNNEL_ANY))
     }
 
     private fun onChangeType(button: Button) {
@@ -148,7 +150,6 @@ class GuiAdvancedMemoryCard(val theMenu: AdvancedMemoryCardMenu) :
         }
     }
 
-    fun getFont(): Font = font
 
     val modeButton by lazy { IconButton((mode.ordinal + 3) * 32, 232, ::onChangeMode) }
 
@@ -309,17 +310,17 @@ class GuiAdvancedMemoryCard(val theMenu: AdvancedMemoryCardMenu) :
         super.afterMouseAction()
     }
 
-    override fun renderMenuBackground(graphics: GuiGraphics) {
-        super.renderMenuBackground(graphics)
-        graphics.blit(TEXTURE, leftPos, topPos, 0, 0.0f, 0.0f, GUI_WIDTH, 60, 288, 264)
+    // Fleet port (26.1): the panel texture is drawn from extractRenderState (menu background hook is gone).
+    private fun drawPanel(graphics: GuiGraphicsExtractor) {
+        graphics.blit(RenderPipelines.GUI_TEXTURED, TEXTURE, leftPos, topPos, 0.0f, 0.0f, GUI_WIDTH, 60, 288, 264)
 
         val p2pHeight = P2PEntryConstants.HEIGHT + 1
         for (i in 0 until scale.size(ySize - 75) - 2) {
             graphics.blit(
+                RenderPipelines.GUI_TEXTURED,
                 TEXTURE,
                 leftPos,
                 topPos + 60 + p2pHeight * i,
-                0,
                 0.0f,
                 60.0f,
                 GUI_WIDTH,
@@ -329,10 +330,10 @@ class GuiAdvancedMemoryCard(val theMenu: AdvancedMemoryCardMenu) :
             )
         }
         graphics.blit(
+            RenderPipelines.GUI_TEXTURED,
             TEXTURE,
             leftPos,
             topPos + ySize - 98,
-            0,
             0.0f,
             102.0f,
             GUI_WIDTH,
@@ -352,31 +353,24 @@ class GuiAdvancedMemoryCard(val theMenu: AdvancedMemoryCardMenu) :
             super<Screen>.mouseScrolled(mouseX, mouseY, scrollX, scrollY)
     }
 
-    override fun render(graphics: GuiGraphics, i: Int, j: Int, f: Float) {
-        this.renderMenuBackground(graphics)
+    override fun extractRenderState(graphics: GuiGraphicsExtractor, i: Int, j: Int, f: Float) {
+        drawPanel(graphics)
 
-        graphics.drawString(
+        graphics.text(
             font,
             Component.translatable("item.betterp2p.advanced_memory_card"),
             leftPos + tableX,
             topPos + 6,
-            0x404040,
+            0xFF404040.toInt(),
             false
         )
-
-        RenderSystem.disableDepthTest()
-        RenderSystem.depthMask(false)
-
-        super.render(graphics, i, j, f)
+        super.extractRenderState(graphics, i, j, f)
 
         renderTooltips(graphics, i, j)
-
-        RenderSystem.depthMask(true)
-        RenderSystem.enableDepthTest()
     }
 
     private fun syncMemoryInfo() {
-        PacketDistributor.sendToServer(
+        ClientPacketDistributor.sendToServer(
             C2SUpdateMemoryInfo(
                 MemoryInfo(
                     Optional.ofNullable(infos.selectedEntry),
@@ -414,7 +408,7 @@ class GuiAdvancedMemoryCard(val theMenu: AdvancedMemoryCardMenu) :
         refreshOverlay()
     }
 
-    private fun renderTooltips(guiGraphics: GuiGraphics, mouseX: Int, mouseY: Int) {
+    private fun renderTooltips(guiGraphics: GuiGraphicsExtractor, mouseX: Int, mouseY: Int) {
         for (c in children()) {
             if (c is ITooltip) {
                 if (!c.isTooltipAreaVisible) {
@@ -445,7 +439,7 @@ class GuiAdvancedMemoryCard(val theMenu: AdvancedMemoryCardMenu) :
     }
 
     private fun drawTooltipWithHeader(
-        guiGraphics: GuiGraphics,
+        guiGraphics: GuiGraphicsExtractor,
         tooltip: Tooltip,
         mouseX: Int,
         mouseY: Int
@@ -457,11 +451,11 @@ class GuiAdvancedMemoryCard(val theMenu: AdvancedMemoryCardMenu) :
         ClientCache.searchText = searchBar.value
         col.onGuiClosed()
         syncMemoryInfo()
-        PacketDistributor.sendToServer(C2SCloseGui())
+        ClientPacketDistributor.sendToServer(C2SCloseGui())
         super.onClose()
     }
 
-    fun drawTooltip(guiGraphics: GuiGraphics, x: Int, y: Int, lines: List<Component>) {
+    fun drawTooltip(guiGraphics: GuiGraphicsExtractor, x: Int, y: Int, lines: List<Component>) {
         if (lines.isEmpty()) {
             return
         }
@@ -477,10 +471,10 @@ class GuiAdvancedMemoryCard(val theMenu: AdvancedMemoryCardMenu) :
         for (line in lines) {
             styledLines.addAll(ComponentRenderUtils.wrapComponents(line, maxWidth, font))
         }
-        guiGraphics.renderTooltip(font, styledLines, x, y)
+        guiGraphics.setTooltipForNextFrame(styledLines, x, y)
     }
 
-    fun drawTooltipWithHeader(guiGraphics: GuiGraphics, x: Int, y: Int, lines: List<Component>) {
+    fun drawTooltipWithHeader(guiGraphics: GuiGraphicsExtractor, x: Int, y: Int, lines: List<Component>) {
         if (lines.isEmpty()) {
             return
         }
@@ -540,16 +534,16 @@ class GuiAdvancedMemoryCard(val theMenu: AdvancedMemoryCardMenu) :
         typeSelector.visible = true
     }
 
-    override fun mouseClicked(mouseX: Double, mouseY: Double, button: Int): Boolean {
-        if (typeSelector.mouseClicked(mouseX, mouseY, button)) return true
+    override fun mouseClicked(event: MouseButtonEvent, doubleClick: Boolean): Boolean {
+        if (typeSelector.mouseClicked(event, doubleClick)) return true
         else closeTypeSelector(type)
-        return super<Screen>.mouseClicked(mouseX, mouseY, button)
+        return super<Screen>.mouseClicked(event, doubleClick)
     }
 
     fun closeTypeSelector(type: ClientTunnelInfo?) {
         if (this.type != type) {
             this.type = type
-            PacketDistributor.sendToServer(C2SRefreshP2PList(type?.index ?: TUNNEL_ANY))
+            ClientPacketDistributor.sendToServer(C2SRefreshP2PList(type?.index ?: TUNNEL_ANY))
         }
 
         typeSelector.visible = false

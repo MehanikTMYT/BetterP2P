@@ -1,9 +1,10 @@
 package dev.lasm.betterp2p.client.gui.widget
 
+import net.minecraft.client.input.MouseButtonEvent
+import net.neoforged.neoforge.client.network.ClientPacketDistributor
 import appeng.parts.p2p.FluidP2PTunnelPart
 import appeng.parts.p2p.MEP2PTunnelPart
 import appeng.parts.p2p.RedstoneP2PTunnelPart
-import com.mojang.blaze3d.systems.RenderSystem
 import dev.lasm.betterp2p.BetterP2P
 import dev.lasm.betterp2p.client.gui.GuiAdvancedMemoryCard
 import dev.lasm.betterp2p.client.gui.drawBlockIcon
@@ -13,7 +14,7 @@ import dev.lasm.betterp2p.util.p2p.ClientTunnelInfo
 import kotlin.reflect.KProperty0
 import net.minecraft.ChatFormatting
 import net.minecraft.client.Minecraft
-import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.network.chat.Component
 import net.minecraft.network.chat.MutableComponent
 import net.neoforged.neoforge.network.PacketDistributor
@@ -53,17 +54,17 @@ class P2PTypeButton(
         }
     }
 
-    override fun mouseClicked(d: Double, e: Double, i: Int): Boolean {
+    override fun mouseClicked(event: MouseButtonEvent, doubleClick: Boolean): Boolean {
         if (!this.active || !this.visible) {
             return false
         }
-        if ((clicked(d, e))) {
-            if (i == 0) {
-                this.playDownSound(Minecraft.getInstance().soundManager)
-                this.onClick(d, e)
+        if (isMouseOver(event.x(), event.y())) {
+            if (event.button() == 0) {
+                playButtonClickSound(Minecraft.getInstance().soundManager)
+                this.onClick(event, doubleClick)
                 return true
-            } else if (i == 1) {
-                this.playDownSound(Minecraft.getInstance().soundManager)
+            } else if (event.button() == 1) {
+                playButtonClickSound(Minecraft.getInstance().soundManager)
                 this.onSecondaryPress.onPress(this)
                 return true
             }
@@ -71,9 +72,7 @@ class P2PTypeButton(
         return false
     }
 
-    override fun renderWidget(guiGraphics: GuiGraphics, mouseX: Int, mouseY: Int, partial: Float) {
-        RenderSystem.enableBlend()
-        RenderSystem.enableDepthTest()
+    override fun extractContents(guiGraphics: GuiGraphicsExtractor, mouseX: Int, mouseY: Int, partial: Float) {
         renderBackground(guiGraphics, mouseY, mouseY, partial)
 
         if (type.get() != null) {
@@ -132,7 +131,7 @@ class P2PTypeButton(
 
     fun commitType() {
         updateHoverText()
-        PacketDistributor.sendToServer(C2SRefreshP2PList(type.get()?.index ?: TUNNEL_ANY))
+        ClientPacketDistributor.sendToServer(C2SRefreshP2PList(type.get()?.index ?: TUNNEL_ANY))
         playDownSound(Minecraft.getInstance().soundManager)
     }
 

@@ -30,7 +30,7 @@ fun getPart(w: BlockGetter, pos: BlockPos, hitResult: HitResult): IPart? {
 }
 
 val AEBasePart.facingPos: BlockPos?
-    get() = host?.location?.pos?.offset(side?.normal ?: Direction.UP.normal)
+    get() = host?.location?.pos?.offset(side?.unitVec3i ?: Direction.UP.unitVec3i)
 
 val AEBasePart.facingTile: BlockEntity?
     get() {

@@ -1,10 +1,12 @@
 package dev.lasm.betterp2p.client.gui.widget
 
-import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.input.MouseButtonEvent
+import net.minecraft.client.renderer.RenderPipelines
+import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.gui.components.AbstractWidget
 import net.minecraft.client.gui.narration.NarrationElementOutput
 import net.minecraft.network.chat.Component
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 
 class WidgetScrollBar(x: Int, y: Int) : AbstractWidget(x, y, 12, 15, Component.empty()) {
     var pageSize = 1
@@ -16,16 +18,16 @@ class WidgetScrollBar(x: Int, y: Int) : AbstractWidget(x, y, 12, 15, Component.e
 
     var currentScroll = 0
 
-    val SCROLLER = ResourceLocation.withDefaultNamespace("container/creative_inventory/scroller")
+    val SCROLLER = Identifier.withDefaultNamespace("container/creative_inventory/scroller")
     val SCROLLER_DISABLED =
-        ResourceLocation.withDefaultNamespace("container/creative_inventory/scroller_disabled")
+        Identifier.withDefaultNamespace("container/creative_inventory/scroller_disabled")
 
-    override fun renderWidget(graphics: GuiGraphics, mouseX: Int, mouseY: Int, partialTick: Float) {
+    override fun extractWidgetRenderState(graphics: GuiGraphicsExtractor, mouseX: Int, mouseY: Int, partialTick: Float) {
         if (getRange() == 0) {
-            graphics.blitSprite(SCROLLER_DISABLED, x, y, 12, 15)
+            graphics.blitSprite(RenderPipelines.GUI_TEXTURED, SCROLLER_DISABLED, x, y, 12, 15)
         } else {
             val offset = (currentScroll - minScroll) * (height - 15) / getRange()
-            graphics.blitSprite(SCROLLER, x, offset + y, 12, 15)
+            graphics.blitSprite(RenderPipelines.GUI_TEXTURED, SCROLLER, x, offset + y, 12, 15)
         }
     }
 
@@ -48,15 +50,15 @@ class WidgetScrollBar(x: Int, y: Int) : AbstractWidget(x, y, 12, 15, Component.e
         onScroll()
     }
 
-    override fun onDrag(mouseX: Double, mouseY: Double, dragX: Double, dragY: Double) {
+    override fun onDrag(event: MouseButtonEvent, dragX: Double, dragY: Double) {
         if (getRange() == 0) {
             return
         }
-        currentScroll = (mouseY - y).toInt()
+        currentScroll = (event.y() - y).toInt()
         currentScroll = minScroll + currentScroll * 2 * getRange() / height
         currentScroll = currentScroll + 1 shr 1
         applyRange()
-        super.onDrag(mouseX, mouseY, dragX, dragY)
+        super.onDrag(event, dragX, dragY)
     }
 
     override fun mouseScrolled(

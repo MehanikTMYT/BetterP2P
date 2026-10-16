@@ -177,10 +177,7 @@ class GridServerCache(private val grid: IGrid, val player: Player, var type: Int
      */
     private fun changeP2PType(tunnel: P2PTunnelPart<*>, newType: TunnelInfo): P2PTunnelPart<*>? {
         if (BetterP2P.proxy.getP2PFromClass(tunnel.javaClass) == newType) {
-            player.displayClientMessage(
-                Component.translatable("gui.advanced_memory_card.error.same_type"),
-                false
-            )
+            player.sendSystemMessage(Component.translatable("gui.advanced_memory_card.error.same_type"))
             return null
         }
 

@@ -9,18 +9,18 @@ import net.minecraft.client.Minecraft
 import net.minecraft.network.codec.ByteBufCodecs
 import net.minecraft.network.codec.StreamCodec
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import net.neoforged.neoforge.network.handling.IPayloadContext
 
 class S2CUpdateP2P(val infos: List<P2PInfo> = emptyList(), val clear: Boolean = false) :
     IS2CMessage {
 
-    override fun type(): CustomPacketPayload.Type<out CustomPacketPayload?> = TYPE
+    override fun type(): CustomPacketPayload.Type<out CustomPacketPayload> = TYPE
 
     companion object {
         val TYPE =
             CustomPacketPayload.Type<S2CUpdateP2P>(
-                ResourceLocation.fromNamespaceAndPath(BetterP2P.MOD_ID, "update_p2p")
+                Identifier.fromNamespaceAndPath(BetterP2P.MOD_ID, "update_p2p")
             )
         val STREAM_CODEC: StreamCodec<ByteBuf, S2CUpdateP2P> =
             StreamCodec.composite(

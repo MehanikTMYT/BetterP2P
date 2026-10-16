@@ -12,25 +12,28 @@ import java.util.Optional
 import net.minecraft.network.chat.Component
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.InteractionResult
-import net.minecraft.world.InteractionResultHolder
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.TooltipFlag
+import net.minecraft.world.item.component.TooltipDisplay
+import java.util.function.Consumer
 import net.minecraft.world.item.context.UseOnContext
 import net.minecraft.world.level.Level
 
-object ItemAdvancedMemoryCard :
-    Item(Properties().stacksTo(1).component(BetterP2P.MEMORY_INFO, MemoryInfo())) {
+// Fleet port (26.1): items need their registry id in Properties, so this is a class created by registerItem.
+class ItemAdvancedMemoryCard(properties: Properties) :
+    Item(properties.stacksTo(1).component(BetterP2P.MEMORY_INFO, MemoryInfo())) {
 
     override fun appendHoverText(
         stack: ItemStack,
         context: TooltipContext,
-        list: MutableList<Component>,
+        display: TooltipDisplay,
+        list: Consumer<Component>,
         tooltipFlag: TooltipFlag
     ) {
         val info = stack.components.get(BetterP2P.MEMORY_INFO.get())!!
-        list.add(
+        list.accept(
             Component.translatable("gui.advanced_memory_card.mode.${info.mode.name.lowercase()}")
         )
     }
@@ -39,10 +42,10 @@ object ItemAdvancedMemoryCard :
         level: Level,
         player: Player,
         interactionHand: InteractionHand
-    ): InteractionResultHolder<ItemStack> {
-        if (player.isCrouching && !level.isClientSide) {
+    ): InteractionResult {
+        if (player.isCrouching && !level.isClientSide()) {
             ClientCache.clear()
-            return InteractionResultHolder.success(player.getItemInHand(interactionHand))
+            return InteractionResult.SUCCESS
         }
         return super.use(level, player, interactionHand)
     }
@@ -53,7 +56,7 @@ object ItemAdvancedMemoryCard :
         val stack = useOnContext.itemInHand
         val pos = useOnContext.clickedPos
 
-        if (w.isClientSide) return InteractionResult.PASS
+        if (w.isClientSide()) return InteractionResult.PASS
 
         val te = w.getBlockEntity(pos)
         if (te is IInWorldGridNodeHost && te is IPartHost) {

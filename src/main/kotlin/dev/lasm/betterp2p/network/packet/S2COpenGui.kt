@@ -9,7 +9,7 @@ import net.minecraft.client.Minecraft
 import net.minecraft.network.codec.ByteBufCodecs
 import net.minecraft.network.codec.StreamCodec
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import net.neoforged.neoforge.network.handling.IPayloadContext
 
 class S2COpenGui(
@@ -17,12 +17,12 @@ class S2COpenGui(
     val memoryInfo: MemoryInfo = MemoryInfo()
 ) : IS2CMessage {
 
-    override fun type(): CustomPacketPayload.Type<out CustomPacketPayload?> = TYPE
+    override fun type(): CustomPacketPayload.Type<out CustomPacketPayload> = TYPE
 
     companion object {
         val TYPE =
             CustomPacketPayload.Type<S2COpenGui>(
-                ResourceLocation.fromNamespaceAndPath(BetterP2P.MOD_ID, "open_gui")
+                Identifier.fromNamespaceAndPath(BetterP2P.MOD_ID, "open_gui")
             )
         val STREAM_CODEC: StreamCodec<ByteBuf, S2COpenGui> =
             StreamCodec.composite(

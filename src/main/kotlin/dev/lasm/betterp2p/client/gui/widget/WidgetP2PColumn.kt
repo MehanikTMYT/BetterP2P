@@ -1,5 +1,7 @@
 package dev.lasm.betterp2p.client.gui.widget
 
+import net.minecraft.client.input.MouseButtonEvent
+import net.neoforged.neoforge.client.network.ClientPacketDistributor
 import dev.lasm.betterp2p.BetterP2P
 import dev.lasm.betterp2p.client.gui.GuiAdvancedMemoryCard
 import dev.lasm.betterp2p.client.gui.InfoList
@@ -11,7 +13,7 @@ import dev.lasm.betterp2p.network.packet.C2SUnlinkP2P
 import java.util.function.Consumer
 import kotlin.reflect.KProperty0
 import net.minecraft.client.gui.Font
-import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.gui.components.AbstractWidget
 import net.minecraft.client.gui.components.Button
 import net.minecraft.client.gui.components.EditBox
@@ -79,7 +81,7 @@ class WidgetP2PColumn(
         }
     }
 
-    override fun renderWidget(guiGraphics: GuiGraphics, i: Int, j: Int, f: Float) {}
+    override fun extractWidgetRenderState(guiGraphics: GuiGraphicsExtractor, i: Int, j: Int, f: Float) {}
 
     override fun updateWidgetNarration(narrationElementOutput: NarrationElementOutput) {}
 
@@ -96,7 +98,7 @@ class WidgetP2PColumn(
             val info: InfoWrapper = renameBar.info!!
 
             renameBar.value = renameBar.value.trim()
-            PacketDistributor.sendToServer(C2SRenameP2P(info.loc, renameBar.value))
+            ClientPacketDistributor.sendToServer(C2SRenameP2P(info.loc, renameBar.value))
         }
         renameBar.visible = false
         renameBar.value = ""
@@ -120,12 +122,12 @@ class WidgetP2PColumn(
         gui.focused = renameBar
     }
 
-    override fun onClick(mouseX: Double, mouseY: Double, button: Int) {
+    override fun onClick(event: MouseButtonEvent, doubleClick: Boolean) {
         val clickRenameButton = false
         if (!clickRenameButton && renameBar.visible) {
             finishRename()
         }
-        super.onClick(mouseX, mouseY, button)
+        super.onClick(event, doubleClick)
     }
 
     fun onBindButtonClicked(button: Button, info: InfoWrapper) {
@@ -134,15 +136,15 @@ class WidgetP2PColumn(
         when (mode()) {
             BetterMemoryCardModes.INPUT -> {
                 BetterP2P.logger.debug("Bind {} as input", info.loc)
-                PacketDistributor.sendToServer(C2SLinkP2P(info.loc, infos.selectedEntry!!))
+                ClientPacketDistributor.sendToServer(C2SLinkP2P(info.loc, infos.selectedEntry!!))
             }
             BetterMemoryCardModes.OUTPUT -> {
                 BetterP2P.logger.debug("Bind {} as output", info.loc)
-                PacketDistributor.sendToServer(C2SLinkP2P(infos.selectedEntry!!, info.loc))
+                ClientPacketDistributor.sendToServer(C2SLinkP2P(infos.selectedEntry!!, info.loc))
             }
             BetterMemoryCardModes.COPY -> {
                 val input = findInput(infos.selectedInfo?.frequency)
-                if (input != null) PacketDistributor.sendToServer(C2SLinkP2P(input.loc, info.loc))
+                if (input != null) ClientPacketDistributor.sendToServer(C2SLinkP2P(input.loc, info.loc))
             }
             else -> {
                 BetterP2P.logger.debug("Somehow bind button was pressed while in UNBIND mode.")
@@ -154,7 +156,7 @@ class WidgetP2PColumn(
     fun onUnbindButtonClicked(button: Button, info: InfoWrapper) {
         button.active = false
         if (info.frequency != 0.toShort()) {
-            PacketDistributor.sendToServer(C2SUnlinkP2P(info.loc, gui.getTypeID()))
+            ClientPacketDistributor.sendToServer(C2SUnlinkP2P(info.loc, gui.getTypeID()))
             info.frequency = 0.toShort()
         }
         gui.onRefresh(null)
