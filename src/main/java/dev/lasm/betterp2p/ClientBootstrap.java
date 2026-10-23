@@ -2,6 +2,7 @@ package dev.lasm.betterp2p;
 import dev.lasm.betterp2p.client.ClientCache;
 import dev.lasm.betterp2p.client.RenderBlockOutline;
 import dev.lasm.betterp2p.client.gui.GuiAdvancedMemoryCard;
+import dev.lasm.betterp2p.client.AdvancedMemoryCardMenu;
 import net.minecraft.client.Minecraft;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.common.NeoForge;
@@ -18,7 +19,7 @@ final class ClientBootstrap {
         return new ClientProxy();
     }
     private static void registerScreens(RegisterMenuScreensEvent event) {
-        event.register(BetterP2P.ADVANCED_MEMORY_CARD_MENU.get(), (menu, inventory, title) -> new GuiAdvancedMemoryCard(menu));
+        event.<AdvancedMemoryCardMenu, GuiAdvancedMemoryCard>register(BetterP2P.ADVANCED_MEMORY_CARD_MENU.get(), (AdvancedMemoryCardMenu menu, net.minecraft.world.entity.player.Inventory inventory, net.minecraft.network.chat.Component title) -> new GuiAdvancedMemoryCard(menu));
     }
     private static void render(RenderLevelStageEvent.AfterTranslucentFeatures event) {
         var minecraft = Minecraft.getInstance();
