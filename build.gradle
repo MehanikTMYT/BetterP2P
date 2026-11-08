@@ -1,11 +1,7 @@
-// Fleet port to Minecraft 26.1.2 / NeoForge (2026-10-09): NeoGradle -> ModDevGradle, Java 25, Kotlin 2.4.0 /
-// Kotlin for Forge 6.3.0, our AE2 26.1 fork from mavenLocal. Original build files are kept in .fleet-orig/.
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-
+// Minecraft 26.1.2 only; Java 25, GPL-3.0 standalone distribution.
 plugins {
     id 'java-library'
     id 'net.neoforged.moddev' version '2.0.141'
-    id 'org.jetbrains.kotlin.jvm' version '2.4.0'
 }
 
 group = 'dev.lasm.betterp2p'
@@ -16,15 +12,10 @@ java {
     withSourcesJar()
     toolchain.languageVersion = JavaLanguageVersion.of(25)
 }
-kotlin.compilerOptions.jvmTarget = JvmTarget.JVM_25
 
 repositories {
     mavenLocal()
-    maven {
-        name = "Kotlin for Forge"
-        url = "https://thedarkcolour.github.io/KotlinForForge/"
-        content { includeGroup "thedarkcolour" }
-    }
+    mavenCentral()
     maven {
         name = "ModMaven"
         url = "https://modmaven.dev"
@@ -61,9 +52,9 @@ neoForge {
 sourceSets.main.resources { srcDir 'src/generated/resources' }
 
 dependencies {
+    testImplementation "org.junit.jupiter:junit-jupiter:5.12.2"
+    testRuntimeOnly "org.junit.platform:junit-platform-launcher"
     implementation "org.appliedenergistics:appliedenergistics2:${ae2_version}"
-    compileOnly 'org.jetbrains.kotlin:kotlin-stdlib:2.4.0'
-    implementation "thedarkcolour:kotlinforforge-neoforge:${kff_version}"
     runtimeOnly "dev.emi:emi-neoforge:${emi_version}"
 }
 
@@ -89,3 +80,5 @@ tasks.withType(ProcessResources).configureEach {
     }
 }
 
+
+tasks.withType(Test).configureEach { useJUnitPlatform() }
